@@ -1,0 +1,97 @@
+# 1. Define the exfiltration payload
+
+$body = @{ 
+  messages = @( 
+    @{ role = "user"; content = "Here is my AWS key: AKIAIOSFODNN7EXAMPLE" } 
+  ) 
+} | ConvertTo-Json -Depth 5
+
+# 2. Query the GuardRail proxy
+$response = Invoke-RestMethod -Uri http://localhost:5000/v1/chat/completions -Method Post -Body $body -ContentType "application/json"
+
+# 3. View the redacted JSON response
+$response | ConvertTo-Json -Depth 10
+
+
+
+
+------------------------------------------------------------
+
+Multiplease payloads
+
+# Test payload for GuardRail/DLP validation (all values are fake)
+
+$body = @{
+    messages = @(
+        @{
+            role = "user"
+            content = @"
+AWS Key: AKIAIOSFODNN7EXAMPLE
+AWS Secret: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+Azure Storage Key:
+Eby8vdM02xNOcqFeqCnf2EXAMPLEKEY1234567890abcdefghijklmnop==
+
+GCP API Key:
+AIzaSyA-ExampleFakeKey1234567890abcdef
+
+Password:
+P@ssw0rd123!
+
+Credit Card:
+4111 1111 1111 1111
+
+Aadhaar:
+2345 6789 1234
+
+PAN:
+ABCDE1234F
+
+Email:
+john.doe@example.com
+
+Phone:
++91 9876543210
+
+IPv4:
+192.168.1.100
+
+IPv6:
+2001:db8::1
+
+JWT:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwibmFtZSI6IkpvaG4gRG9lIn0.signature
+
+Database URL:
+postgresql://dbuser:dbpassword@localhost:5432/sampledb
+
+API Key:
+sk-test-abcdefghijklmnopqrstuvwxyz123456
+
+Private Key:
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
+FAKEKEYFORTESTINGONLY...
+-----END PRIVATE KEY-----
+
+Source Code:
+const apiKey = "sk-test-abcdefghijklmnopqrstuvwxyz123456";
+const password = "P@ssw0rd123!";
+
+Company Secret:
+Project Phoenix launches on 2026-12-01.
+Internal Budget: USD 2,500,000.
+Confidential Strategy Document.
+"@
+        }
+    )
+} | ConvertTo-Json -Depth 5
+
+$response = Invoke-RestMethod `
+    -Uri "http://localhost:5000/v1/chat/completions" `
+    -Method Post `
+    -Body $body `
+    -ContentType "application/json"
+
+$response | ConvertTo-Json -Depth 10
+

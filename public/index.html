@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuardRail AI - DLP Proxy & Telemetry Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon-wrapper">
+                    <i class="fa-solid fa-shield-halved logo-icon"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">GuardRail <span class="accent-text">AI</span></span>
+                    <span class="logo-subtitle">LLM DLP Proxy</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target="dashboard-view">
+                    <i class="fa-solid fa-chart-line nav-icon"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-btn" data-target="playground-view">
+                    <i class="fa-solid fa-terminal nav-icon"></i>
+                    <span>Playground</span>
+                </button>
+                <button class="nav-btn" data-target="policies-view">
+                    <i class="fa-solid fa-sliders nav-icon"></i>
+                    <span>Policies & NIM</span>
+                </button>
+                <button class="nav-btn" data-target="terminal-view">
+                    <i class="fa-solid fa-code nav-icon"></i>
+                    <span>Proxy Terminal</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="pulse-glow green"></span>
+                    <div class="status-details">
+                        <span class="status-title">Proxy Status</span>
+                        <span class="status-value">ONLINE : Port 5000</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view-panel active">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Threat Telemetry Dashboard</h1>
+                        <p class="view-description">Real-time monitoring of outbound prompt interceptions, leak redactions, and proxy telemetry.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="refresh-telemetry-btn" class="btn btn-secondary">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sync Live
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card glassmorphic">
+                        <div class="metric-info">
+                            <span class="metric-label">Prompts Inspected</span>
+                            <span id="metric-total" class="metric-value">0</span>
+                        </div>
+                        <div class="metric-icon-box bg-purple">
+                            <i class="fa-solid fa-eye"></i>
+                        </div>
+                    </div>
+                    <div class="metric-card glassmorphic">
+                        <div class="metric-info">
+                            <span class="metric-label">Mitigation Rate</span>
+                            <span id="metric-mitigation-rate" class="metric-value">0%</span>
+                        </div>
+                        <div class="metric-icon-box bg-orange">
+                            <i class="fa-solid fa-filter-circle-xmark"></i>
+                        </div>
+                    </div>
+                    <div class="metric-card glassmorphic">
+                        <div class="metric-info">
+                            <span class="metric-label">Leaks Redacted</span>
+                            <span id="metric-redacted" class="metric-value">0</span>
+                        </div>
+                        <div class="metric-icon-box bg-emerald">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                    </div>
+                    <div class="metric-card glassmorphic">
+                        <div class="metric-info">
+                            <span class="metric-label">Avg Proxy Overhead</span>
+                            <span id="metric-latency" class="metric-value">0ms</span>
+                        </div>
+                        <div class="metric-icon-box bg-blue">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Layout -->
+                <div class="charts-row">
+                    <div class="chart-card glassmorphic">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Interception & Threat Log Volume</h3>
+                            <span class="chart-subtitle">Hourly summary of processed traffic</span>
+                        </div>
+                        <div class="chart-body" id="line-chart-container">
+                            <!-- Custom SVG Line Chart will be injected here -->
+                        </div>
+                    </div>
+                    <div class="chart-card glassmorphic">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Mitigated Risk Categories</h3>
+                            <span class="chart-subtitle">Distribution of threat types caught</span>
+                        </div>
+                        <div class="chart-body donut-chart-body" id="donut-chart-container">
+                            <!-- Custom SVG Donut Chart will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Trail Table -->
+                <div class="table-card glassmorphic">
+                    <div class="table-header">
+                        <h3 class="table-title">Proxy Audit Trail</h3>
+                        <div class="table-actions">
+                            <input type="text" id="audit-search" placeholder="Search threats..." class="search-input">
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Source Instance</th>
+                                    <th>Destination API</th>
+                                    <th>Mitigated Threat Category</th>
+                                    <th>Proxy Action</th>
+                                    <th>Scan Latency</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-tbody">
+                                <!-- Dynamic audit entries will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Playground View -->
+            <section id="playground-view" class="view-panel">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Proxy Interception Playground</h1>
+                        <p class="view-description">Simulate employee interactions and watch GuardRail intercept, scan, and sanitize requests in real-time.</p>
+                    </div>
+                </header>
+
+                <div class="playground-layout">
+                    <!-- Prompt Entry Block -->
+                    <div class="playground-card glassmorphic">
+                        <div class="card-header border-bottom">
+                            <div class="header-with-badge">
+                                <i class="fa-solid fa-keyboard icon-accent"></i>
+                                <h3>Client Outbound Request</h3>
+                            </div>
+                            <div class="presets-selector">
+                                <span class="presets-label">Load Preset Leak:</span>
+                                <button class="btn-preset" data-preset="aws_key">AWS Keys</button>
+                                <button class="btn-preset" data-preset="candidate_ssn">HR PII</button>
+                                <button class="btn-preset" data-preset="finance_leak">M&A Target</button>
+                                <button class="btn-preset" data-preset="clean">Clean Prompt</button>
+                            </div>
+                        </div>
+                        
+                        <div class="playground-body">
+                            <label class="input-label">Prompt Content</label>
+                            <textarea id="playground-prompt" class="prompt-textarea" placeholder="Paste your code, email draft or document text containing potential secrets here..."></textarea>
+                            
+                            <div class="playground-settings-row">
+                                <div class="setting-item">
+                                    <label class="input-label">Simulate Target LLM</label>
+                                    <select id="playground-dest" class="styled-select">
+                                        <option value="openai">OpenAI GPT-4o (via Proxy)</option>
+                                        <option value="claude">Anthropic Claude 3.5 Sonnet (via Proxy)</option>
+                                    </select>
+                                </div>
+                                <div class="setting-item flex-end">
+                                    <button id="run-guardrail-btn" class="btn btn-primary btn-glow">
+                                        <i class="fa-solid fa-play"></i> Run through GuardRail
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scan Analyzer & Outputs -->
+                    <div class="playground-card glassmorphic bg-dark-slate">
+                        <div class="card-header border-bottom">
+                            <div class="header-with-badge">
+                                <span class="pulse-glow blue blinking" id="scanning-indicator" style="display:none;"></span>
+                                <i class="fa-solid fa-magnifying-glass-shield icon-accent"></i>
+                                <h3>GuardRail Inspection Engine</h3>
+                            </div>
+                            <span id="scan-status" class="scan-status-idle">Idle</span>
+                        </div>
+
+                        <div class="playground-body analyzer-body">
+                            <!-- Visual scanning steps -->
+                            <div class="scan-pipeline">
+                                <div class="pipeline-step" id="step-intercept">
+                                    <i class="fa-solid fa-right-to-bracket step-icon"></i>
+                                    <span class="step-label">Intercept Prompt Packet</span>
+                                </div>
+                                <div class="pipeline-line"></div>
+                                <div class="pipeline-step" id="step-nim">
+                                    <i class="fa-solid fa-circle-nodes step-icon"></i>
+                                    <span class="step-label">NVIDIA NIM Guard Scan</span>
+                                </div>
+                                <div class="pipeline-line"></div>
+                                <div class="pipeline-step" id="step-redact">
+                                    <i class="fa-solid fa-user-shield step-icon"></i>
+                                    <span class="step-label">Apply Redaction Rules</span>
+                                </div>
+                            </div>
+
+                            <!-- Dual Output Viewer -->
+                            <div class="dual-output-container">
+                                <div class="output-box">
+                                    <div class="output-header">
+                                        <span>Raw Content Highlights</span>
+                                        <span class="badge badge-error" id="raw-badge" style="display:none;">Risks Found</span>
+                                    </div>
+                                    <div id="playground-raw-output" class="output-content text-faded pre-wrap">Prompt has not been run. Click "Run through GuardRail" to begin analysis.</div>
+                                </div>
+                                
+                                <div class="output-box">
+                                    <div class="output-header">
+                                        <span>Forwarded Sanitized Payload</span>
+                                        <span class="badge badge-success" id="sanitized-badge" style="display:none;">Sanitized</span>
+                                    </div>
+                                    <div id="playground-sanitized-output" class="output-content code-font text-highlight pre-wrap">Waiting for proxy process...</div>
+                                </div>
+                            </div>
+
+                            <!-- LLM Response Container -->
+                            <div class="llm-response-box">
+                                <div class="output-header">
+                                    <span>LLM Response (via Proxy Forwarding)</span>
+                                </div>
+                                <div id="playground-llm-response" class="output-content response-content pre-wrap">No response generated yet.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Policies View -->
+            <section id="policies-view" class="view-panel">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">DLP Policy Configuration</h1>
+                        <p class="view-description">Enable heuristic and NVIDIA NIM model guardrails, adjust thresholds, and set action rules.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="save-policies-btn" class="btn btn-primary btn-glow">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Policies
+                        </button>
+                    </div>
+                </header>
+
+                <div class="policies-layout">
+                    <!-- Main policy scanner configuration -->
+                    <div class="policies-main">
+                        <div class="grid-2-col">
+                            
+                            <!-- Scanner: API Keys -->
+                            <div class="policy-card glassmorphic">
+                                <div class="policy-card-header">
+                                    <div class="policy-title-box">
+                                        <i class="fa-solid fa-key text-purple"></i>
+                                        <div>
+                                            <h4>API Keys & Credentials</h4>
+                                            <p>Scans for AWS/Azure/GCP Keys, JWT Tokens, Passwords, Database URLs, and general API Keys.</p>
+                                        </div>
+                                    </div>
+                                    <label class="switch-toggle">
+                                        <input type="checkbox" id="policy-api-enabled" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="policy-card-body">
+                                    <div class="policy-setting">
+                                        <label class="setting-label">Mitigation Action</label>
+                                        <select id="policy-api-action" class="styled-select w-full">
+                                            <option value="redact">Redact and Replace</option>
+                                            <option value="block">Block request entirely</option>
+                                        </select>
+                                    </div>
+                                    <div class="policy-setting">
+                                        <div class="slider-label-row">
+                                            <label class="setting-label">Sensitivity Threshold</label>
+                                            <span id="slider-api-val" class="slider-value">0.80</span>
+                                        </div>
+                                        <input type="range" id="policy-api-sensitivity" min="0.1" max="1.0" step="0.05" value="0.80" class="styled-slider">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scanner: PII -->
+                            <div class="policy-card glassmorphic">
+                                <div class="policy-card-header">
+                                    <div class="policy-title-box">
+                                        <i class="fa-solid fa-id-card text-emerald"></i>
+                                        <div>
+                                            <h4>Personally Identifiable Info</h4>
+                                            <p>Scans for Emails, Phone Numbers, Credit Cards, Aadhaar Numbers, PAN Cards, and IP/SSN details.</p>
+                                        </div>
+                                    </div>
+                                    <label class="switch-toggle">
+                                        <input type="checkbox" id="policy-pii-enabled" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="policy-card-body">
+                                    <div class="policy-setting">
+                                        <label class="setting-label">Mitigation Action</label>
+                                        <select id="policy-pii-action" class="styled-select w-full">
+                                            <option value="redact">Redact and Replace</option>
+                                            <option value="block">Block request entirely</option>
+                                        </select>
+                                    </div>
+                                    <div class="policy-setting">
+                                        <div class="slider-label-row">
+                                            <label class="setting-label">Sensitivity Threshold</label>
+                                            <span id="slider-pii-val" class="slider-value">0.70</span>
+                                        </div>
+                                        <input type="range" id="policy-pii-sensitivity" min="0.1" max="1.0" step="0.05" value="0.70" class="styled-slider">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scanner: IP -->
+                            <div class="policy-card glassmorphic">
+                                <div class="policy-card-header">
+                                    <div class="policy-title-box">
+                                        <i class="fa-solid fa-code text-blue"></i>
+                                        <div>
+                                            <h4>Intellectual Property & Code</h4>
+                                            <p>Scans for Private Keys and Source Code File Structures.</p>
+                                        </div>
+                                    </div>
+                                    <label class="switch-toggle">
+                                        <input type="checkbox" id="policy-ip-enabled" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="policy-card-body">
+                                    <div class="policy-setting">
+                                        <label class="setting-label">Mitigation Action</label>
+                                        <select id="policy-ip-action" class="styled-select w-full">
+                                            <option value="redact">Redact and Replace</option>
+                                            <option value="block">Block request entirely</option>
+                                        </select>
+                                    </div>
+                                    <div class="policy-setting">
+                                        <div class="slider-label-row">
+                                            <label class="setting-label">Sensitivity Threshold</label>
+                                            <span id="slider-ip-val" class="slider-value">0.75</span>
+                                        </div>
+                                        <input type="range" id="policy-ip-sensitivity" min="0.1" max="1.0" step="0.05" value="0.75" class="styled-slider">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scanner: Financials -->
+                            <div class="policy-card glassmorphic">
+                                <div class="policy-card-header">
+                                    <div class="policy-title-box">
+                                        <i class="fa-solid fa-coins text-orange"></i>
+                                        <div>
+                                            <h4>Company & Financial Secrets</h4>
+                                            <p>Scans for Company Secrets, financial forecasts, and custom keywords.</p>
+                                        </div>
+                                    </div>
+                                    <label class="switch-toggle">
+                                        <input type="checkbox" id="policy-fin-enabled" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="policy-card-body">
+                                    <div class="policy-setting">
+                                        <label class="setting-label">Mitigation Action</label>
+                                        <select id="policy-fin-action" class="styled-select w-full">
+                                            <option value="block">Block request entirely</option>
+                                            <option value="redact">Redact and Replace</option>
+                                        </select>
+                                    </div>
+                                    <div class="policy-setting">
+                                        <div class="slider-label-row">
+                                            <label class="setting-label">Sensitivity Threshold</label>
+                                            <span id="slider-fin-val" class="slider-value">0.85</span>
+                                        </div>
+                                        <input type="range" id="policy-fin-sensitivity" min="0.1" max="1.0" step="0.05" value="0.85" class="styled-slider">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Custom Keywords -->
+                        <div class="card-policy-large glassmorphic mt-24">
+                            <div class="large-card-header">
+                                <i class="fa-solid fa-list-check text-purple"></i>
+                                <h3>Custom Company Restrictive Keywords</h3>
+                            </div>
+                            <div class="large-card-body">
+                                <p class="setting-desc">Prompts matching these comma-separated keywords will trigger corporate secrets mitigation automatically.</p>
+                                <textarea id="policy-custom-keywords" class="styled-textarea" placeholder="e.g., merger, acquisition, code-orion, secret-formula"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar configuration: NIM Settings -->
+                    <div class="policies-sidebar">
+                        <div class="policy-card glassmorphic border-glow-blue">
+                            <div class="policy-card-header border-bottom">
+                                <div class="policy-title-box">
+                                    <i class="fa-solid fa-network-wired text-blue"></i>
+                                    <div>
+                                        <h4>NVIDIA NIM Settings</h4>
+                                        <p>Integrate live guardrail checks.</p>
+                                    </div>
+                                </div>
+                                <label class="switch-toggle">
+                                    <input type="checkbox" id="nim-toggle">
+                                    <span class="toggle-slider blue"></span>
+                                </label>
+                            </div>
+                            <div class="policy-card-body pt-16">
+                                <div class="policy-setting">
+                                    <label class="setting-label">NVIDIA NIM API Key</label>
+                                    <input type="password" id="nim-api-key" placeholder="nvapi-..." class="styled-input">
+                                    <span class="input-tip">Left blank to use high-fidelity simulated local analysis.</span>
+                                </div>
+                                <div class="policy-setting">
+                                    <label class="setting-label">NIM Guardrail Model</label>
+                                    <select id="nim-model" class="styled-select w-full">
+                                        <option value="nvidia/llama-3.1-nemoguard-8b">llama-3.1-nemoguard-8b</option>
+                                        <option value="meta/llama3-70b-instruct">llama-3-70b-instruct</option>
+                                        <option value="mistralai/mixtral-8x7b-instruct-v0.1">mixtral-8x7b-instruct-v0.1</option>
+                                    </select>
+                                </div>
+                                <div class="info-alert bg-blue-dim">
+                                    <i class="fa-solid fa-circle-info text-blue"></i>
+                                    <p>NVIDIA NIM microservices deliver 10x higher safety scan throughput compared to standard LLMs with under 20ms latency.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Proxy Terminal View -->
+            <section id="terminal-view" class="view-panel">
+                <header class="view-header">
+                    <div>
+                        <h1 class="view-title">Proxy Terminal Console</h1>
+                        <p class="view-description">Observe standard out logging of the proxy daemon intercepting traffic and routing payloads.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="clear-terminal-btn" class="btn btn-secondary">
+                            <i class="fa-solid fa-trash-can"></i> Clear Terminal
+                        </button>
+                    </div>
+                </header>
+
+                <div class="terminal-container glassmorphic">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <span class="terminal-title">guardrail-proxy.log</span>
+                        <div class="terminal-actions">
+                            <span class="terminal-badge"><i class="fa-solid fa-server"></i> daemon online</span>
+                        </div>
+                    </div>
+                    <div id="terminal-body" class="terminal-body code-font">
+                        <!-- Dynamic proxy standard out will be appended here -->
+                        <div class="terminal-line"><span class="t-info">[INFO]</span> GuardRail AI proxy starting...</div>
+                        <div class="terminal-line"><span class="t-info">[INFO]</span> Regex heuristic scanner initialized successfully.</div>
+                        <div class="terminal-line"><span class="t-info">[INFO]</span> Proxy server bound to port 5000.</div>
+                        <div class="terminal-line"><span class="t-success">[READY]</span> Awaiting incoming HTTP prompt packets on localhost:5000/v1/chat/completions</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Incident Details Modal -->
+    <div id="incident-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-content glassmorphic">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-exclamation text-orange"></i> Interception Threat Detail</h3>
+                <button id="close-modal-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid-top">
+                    <div class="modal-meta-item">
+                        <span class="modal-meta-label">Incident ID</span>
+                        <span id="modal-id" class="modal-meta-value code-font">t-xxxx</span>
+                    </div>
+                    <div class="modal-meta-item">
+                        <span class="modal-meta-label">Timestamp</span>
+                        <span id="modal-time" class="modal-meta-value">07/04/2026, 22:45:00</span>
+                    </div>
+                    <div class="modal-meta-item">
+                        <span class="modal-meta-label">Source Client</span>
+                        <span id="modal-source" class="modal-meta-value">192.168.1.1</span>
+                    </div>
+                    <div class="modal-meta-item">
+                        <span class="modal-meta-label">NIM Latency Overhead</span>
+                        <span id="modal-latency" class="modal-meta-value text-blue font-bold">14ms</span>
+                    </div>
+                </div>
+
+                <!-- Threat Scans Table -->
+                <div class="modal-section-title">Detected Violations</div>
+                <div class="modal-threat-badges" id="modal-threats-container">
+                    <!-- Badges of matching threat types -->
+                </div>
+
+                <!-- Source / Redacted comparison -->
+                <div class="modal-comparison-grid">
+                    <div class="comp-box">
+                        <div class="comp-header bg-red-dim">
+                            <span>Raw Packet Intercepted</span>
+                            <span class="badge badge-error">Raw Prompt</span>
+                        </div>
+                        <div id="modal-raw-prompt" class="comp-content pre-wrap text-faded">...</div>
+                    </div>
+                    <div class="comp-box">
+                        <div class="comp-header bg-emerald-dim">
+                            <span>Safe Forwarded Packet</span>
+                            <span id="modal-action-badge" class="badge">Redacted</span>
+                        </div>
+                        <div id="modal-redacted-prompt" class="comp-content pre-wrap code-font text-highlight">...</div>
+                    </div>
+                </div>
+
+                <div class="modal-section-title mt-16">LLM Forward Response</div>
+                <div id="modal-llm-response" class="modal-response-content pre-wrap text-highlight">...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Notifications (Toast) -->
+    <div id="toast" class="toast-notification" style="display: none;">
+        <i class="fa-solid fa-circle-check toast-icon"></i>
+        <span id="toast-message">Configuration updated!</span>
+    </div>
+    <script src="app.js" defer></script>
+</body>
+</html>
