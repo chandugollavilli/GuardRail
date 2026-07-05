@@ -1,3 +1,12 @@
+<img width="1920" height="918" alt="image" src="https://github.com/user-attachments/assets/d80637cb-86cf-4caa-8acd-50f5d93cd000" />
+<img width="1920" height="905" alt="image" src="https://github.com/user-attachments/assets/27fb0dc8-8780-4173-b779-a251c3b3442b" />
+
+
+
+
+
+
+
 # 🛡️ GuardRail AI
 
 > High-Performance LLM DLP Proxy & Telemetry Dashboard
